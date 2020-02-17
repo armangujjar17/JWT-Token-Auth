@@ -23,19 +23,29 @@ app.use(bodyParser.urlencoded({ extended: true })
 );
 app.listen(3000);
 
+// app.get('/', function(req,res)
+// {
+//   res.send('<form action="/passwordreset" method="POST">' +
+//   '<input type="email" name="email" value="" placeholder="Enter your email address..." />' +
+//   '<input type="submit" value="Reset Password" />' +
+// '</form>');
+// });
+
+//app.post('/',function(req,res){
+  //var email=req.body.email;
 var transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'armantache@gmail.com',
-    pass: 'tache1212'
+    pass: '******'
   }
 });
 
 const userdata = {
-  name: 'arman chaudhary'
+  email: 'ayan@mail.com'
 }
 
-jwt.sign({ userdata }, 'privatetoken', { expiresIn: '300s' }, (err, token) => {
+jwt.sign({ userdata }, 'privatetoken', { expiresIn: '600s' }, (err, token) => {
   if (err) {
     console.log(err);
   }
@@ -44,49 +54,55 @@ jwt.sign({ userdata }, 'privatetoken', { expiresIn: '300s' }, (err, token) => {
     var mailOptions = {
       from: 'armantache@gmail.com',
       to: 'arman.ali@arstudioz.com',
-      subject: 'Sending Email using Node.js',
+      subject: 'Sending Email Token using Node.js',
       // text: 'http://localhost:3000/'+token
-      html: '<!DOCTYPE html><html><head><title>Forget Password Email</title></head><body><div><h3>Dear User</h3><p>You requested for a password reset, kindly use this token <a href="http://localhost:3000/resetpassword/token/' + token + '">CLICK HERE</a> to reset your password</p><br><p>Cheers!</p></div></body></html>',
+      // html: '<!DOCTYPE html><html><head><title>Forget Password Email</title></head><body><div><h3>Dear User</h3><p>You requested for a password reset, kindly use this token <a href="http://localhost:3000/resetpassword'+token+'">'+token+'</a> to reset your password</p><br><p>Cheers!</p></div></body></html>',
+      text:'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +  
+      'Please click on the following link, or paste this into your browser to complete the process:\n\n' +  
+      'http://localhost:3000' + '/resetpassword/' + token + '\n\n' +  
+      'If you did not request this, please ignore this email and your password will remain unchanged.\n'  
     };
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.log(error);
       } else {
         console.log('Email sent: ' + info.response);
-     
+        // response.send('Token sent on your mail please check there!');
+		    // response.end();
       }
     });
   }
 });
+  
+//});
 
-app.get('/resetpassword/token', function (req, res) {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end(token);
-  // console.log(req.headers);
-  //console.log(JSON.stringify(req.headers));
- 
-  res.send('<form action="/resetpassword" method="POST">' +
-    '<input type="hidden" name="token" value="' + req.params.token + '" />' +
-    '<input type="password" name="password" value="" placeholder="Enter your new password..." />' +
-    '<input type="submit" value="Reset Password" />' +
-    '</form>');
 
-});
-
-app.get('/resetpassword', function (req, res) {
-  var token = req.query.token;
-  jwt.verify(token, 'privatetoken', function (err, decoded) {
+app.get('/resetpassword/:token', function (req, res) {
+ //console.log(res);
+  //console.log([req.params.token]);
+  
+ var token = req.params.token;
+  jwt.verify(token, 'privatetoken', function (err,varifiedJwt) {
     if (err) {
       res.send(err);
     } else {
-      var user = { "email": "armantache@gmail.com" };
-      res.json(user);
+      console.log(varifiedJwt);
+      connection.query('UPDATE user SET password="raka45678" where email=?',[varifiedJwt.userdata.email] , function(error, results, fields)
+      {
+        
+        console.log("[mysql error]",error);
+        res.end('Record has been updated!');
+      });
     }
-  })
-})
+  });
 
-
-
+  //res.send("hello");
+  // res.send('<form action="/resetpassword" method="POST">' +
+  //   '<input type="hidden" name="token" value="' + req.params.token + '" />' +
+  //   '<input type="password" name="password" value="" placeholder="Enter your new password..." />' +
+  //   '<input type="submit" value="Reset Password" />' +
+  //   '</form>');
+});
 
     // var server = app.listen(3000, "127.0.0.1", function () {
 
@@ -95,6 +111,16 @@ app.get('/resetpassword', function (req, res) {
       //   console.log("Example app listening at http://%s:%s", host, port)
       // });
 
+      // app.get('/reseted', function (req, res) {
+//   var token = req.query.token;
+//   jwt.verify(token, 'privatetoken', function (err,vrifiedJwt) {
+//     if (err) {
+//       res.send(err);
+//     } else {
+//       console.log(vrifiedJwt)
+//     }
+//   });
+// })
 
 // app.put('/customer', function (req, res) {
 //     connection.query('UPDATE user SET email=? where id=?', [req.body.email,req.body.id], function (error, results, fields) {
